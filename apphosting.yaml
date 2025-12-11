@@ -1,0 +1,24 @@
+# Firebase App Hosting Configuration
+# This file configures the runtime environment for your Next.js backend
+
+runConfig:
+  # Start with 0 instances when idle to save costs, scale up as needed
+  minInstances: 0
+  maxInstances: 4
+  
+  # Number of concurrent requests per instance
+  concurrency: 80
+  
+  # CPU and memory allocation
+  cpu: 1
+  memoryMiB: 512
+
+# Environment variables and secrets
+env:
+  # CRON_SECRET - Used to authenticate automated cron job requests
+  # This secret is stored in Google Cloud Secret Manager
+  - variable: CRON_SECRET
+    secret: CRON_SECRET
+    availability:
+      - BUILD
+      - RUNTIME

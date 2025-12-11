@@ -1,0 +1,475 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // HELPER FUNCTIONS
+    // ==========================================
+    
+    /**
+     * Check if user is authenticated
+     */
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    /**
+     * Get the authenticated user's data from the users collection
+     */
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    /**
+     * Check if the authenticated user belongs to a specific company
+     */
+    function belongsToCompany(companyId) {
+      return isAuthenticated() && getUserData().companyId == companyId;
+    }
+    
+    /**
+     * Check if the authenticated user has a specific role
+     */
+    function hasRole(role) {
+      return isAuthenticated() && getUserData().role == role;
+    }
+    
+    /**
+     * Check if the authenticated user is a SuperAdmin
+     */
+    function isSuperAdmin() {
+      return hasRole('superadmin');
+    }
+    
+    /**
+     * Check if the authenticated user is an Admin
+     */
+    function isAdmin() {
+      return hasRole('admin');
+    }
+    
+    /**
+     * Check if the authenticated user is a Manager or higher
+     */
+    function isManagerOrAbove() {
+      return isAuthenticated() && getUserData().role in ['superadmin', 'admin', 'manager'];
+    }
+    
+    /**
+     * Check if the incoming data has a valid companyId that matches the user's company
+     */
+    function hasValidCompanyId() {
+      return request.resource.data.companyId == getUserData().companyId;
+    }
+    
+    
+    // ==========================================
+    // USERS COLLECTION
+    // ==========================================
+    // Users can read their own profile
+    // SuperAdmins can read all users
+    // Admins and Managers can read users in their company
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        isSuperAdmin() || 
+        (isManagerOrAbove() && resource.data.companyId == getUserData().companyId)
+      );
+      
+      // Only the user themselves or SuperAdmin can update user profiles
+      allow update: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        isSuperAdmin()
+      );
+      
+      // Only system can create users (through Firebase Auth + server functions)
+      allow create: if false;
+      
+      // Only SuperAdmin can delete users
+      allow delete: if isSuperAdmin();
+    }
+    
+    
+    // ==========================================
+    // COMPANIES COLLECTION
+    // ==========================================
+    // Users can only read/write their own company
+    // SuperAdmins can access all companies
+    match /companies/{companyId} {
+      allow read: if isAuthenticated() && (
+        belongsToCompany(companyId) || 
+        isSuperAdmin()
+      );
+      
+      // Only company Admins or SuperAdmins can update company data
+      allow update: if isAuthenticated() && (
+        (belongsToCompany(companyId) && isAdmin()) || 
+        isSuperAdmin()
+      );
+      
+      // Only SuperAdmin can create companies (or through signup flow)
+      allow create: if isSuperAdmin();
+      
+      // Only SuperAdmin can delete companies
+      allow delete: if isSuperAdmin();
+      
+      
+      // ==========================================
+      // AUTOMATIONS SUBCOLLECTION
+      // ==========================================
+      // Subcollection under companies for email automations
+      match /automations/{automationId} {
+        // Users can read automations in their company
+        allow read: if isAuthenticated() && (
+          belongsToCompany(companyId) || 
+          isSuperAdmin()
+        );
+        
+        // Only Admins or Managers can create/update automations
+        allow create, update: if isAuthenticated() && (
+          (belongsToCompany(companyId) && isManagerOrAbove()) || 
+          isSuperAdmin()
+        );
+        
+        // Only Admins can delete automations
+        allow delete: if isAuthenticated() && (
+          (belongsToCompany(companyId) && isAdmin()) || 
+          isSuperAdmin()
+        );
+      }
+      
+      
+      // ==========================================
+      // AUTOMATION STATES SUBCOLLECTION
+      // ==========================================
+      // Tracks the progress of leads through automation sequences
+      match /automationStates/{stateId} {
+        // Users can read automation states in their company
+        allow read: if isAuthenticated() && (
+          belongsToCompany(companyId) || 
+          isSuperAdmin()
+        );
+        
+        // System and Managers can create/update automation states
+        allow create, update: if isAuthenticated() && (
+          (belongsToCompany(companyId) && isManagerOrAbove()) || 
+          isSuperAdmin()
+        );
+        
+        // Only Admins can delete automation states
+        allow delete: if isAuthenticated() && (
+          (belongsToCompany(companyId) && isAdmin()) || 
+          isSuperAdmin()
+        );
+      }
+      
+      
+      // ==========================================
+      // USERS SUBCOLLECTION
+      // ==========================================
+      // User-specific data nested under company
+      match /users/{userId} {
+        
+        // ==========================================
+        // CHAT SESSIONS SUBCOLLECTION
+        // ==========================================
+        // AI chat conversation sessions
+        match /chatSessions/{sessionId} {
+          // Users can only read their own chat sessions
+          allow read: if isAuthenticated() && (
+            (request.auth.uid == userId && belongsToCompany(companyId)) ||
+            isSuperAdmin()
+          );
+          
+          // Users can create their own chat sessions
+          allow create: if isAuthenticated() && (
+            (request.auth.uid == userId && 
+             belongsToCompany(companyId) &&
+             request.resource.data.userId == userId &&
+             request.resource.data.companyId == companyId) ||
+            isSuperAdmin()
+          );
+          
+          // Users can update their own chat sessions
+          allow update: if isAuthenticated() && (
+            (request.auth.uid == userId && 
+             belongsToCompany(companyId) &&
+             resource.data.userId == userId) ||
+            isSuperAdmin()
+          );
+          
+          // Users can delete their own chat sessions
+          allow delete: if isAuthenticated() && (
+            (request.auth.uid == userId && 
+             belongsToCompany(companyId) &&
+             resource.data.userId == userId) ||
+            isSuperAdmin()
+          );
+          
+          
+          // ==========================================
+          // MESSAGES SUBCOLLECTION
+          // ==========================================
+          // Messages within a chat session
+          match /messages/{messageId} {
+            // Users can only read messages from their own sessions
+            allow read: if isAuthenticated() && (
+              (request.auth.uid == userId && belongsToCompany(companyId)) ||
+              isSuperAdmin()
+            );
+            
+            // Users can create messages in their own sessions
+            allow create: if isAuthenticated() && (
+              (request.auth.uid == userId && 
+               belongsToCompany(companyId) &&
+               request.resource.data.sessionId == sessionId) ||
+              isSuperAdmin()
+            );
+            
+            // Users can update their own messages
+            allow update: if isAuthenticated() && (
+              (request.auth.uid == userId && belongsToCompany(companyId)) ||
+              isSuperAdmin()
+            );
+            
+            // Users can delete their own messages
+            allow delete: if isAuthenticated() && (
+              (request.auth.uid == userId && belongsToCompany(companyId)) ||
+              isSuperAdmin()
+            );
+          }
+        }
+      }
+    }
+    
+    
+    // ==========================================
+    // SOCIAL POSTS COLLECTION
+    // ==========================================
+    // Social media posts must be scoped to company
+    match /socialPosts/{postId} {
+      // Users can read posts from their own company
+      allow read: if isAuthenticated() && (
+        resource.data.companyId == getUserData().companyId || 
+        isSuperAdmin()
+      );
+      
+      // Users can create posts for their own company
+      allow create: if isAuthenticated() && (
+        hasValidCompanyId() || 
+        isSuperAdmin()
+      );
+      
+      // Users can update posts from their own company
+      allow update: if isAuthenticated() && (
+        resource.data.companyId == getUserData().companyId || 
+        isSuperAdmin()
+      );
+      
+      // Users can delete posts from their own company
+      allow delete: if isAuthenticated() && (
+        resource.data.companyId == getUserData().companyId || 
+        isSuperAdmin()
+      );
+    }
+    
+    
+    // ==========================================
+    // LEADS COLLECTION
+    // ==========================================
+    // CRM leads must be scoped to company
+    match /leads/{leadId} {
+      // Users can read leads from their own company
+      allow read: if isAuthenticated() && (
+        resource.data.companyId == getUserData().companyId || 
+        isSuperAdmin()
+      );
+      
+      // Users can create leads for their own company
+      allow create: if isAuthenticated() && (
+        hasValidCompanyId() || 
+        isSuperAdmin()
+      );
+      
+      // Users can update leads from their own company
+      allow update: if isAuthenticated() && (
+        resource.data.companyId == getUserData().companyId || 
+        isSuperAdmin()
+      );
+      
+      // Only Managers and above can delete leads
+      allow delete: if isAuthenticated() && (
+        (resource.data.companyId == getUserData().companyId && isManagerOrAbove()) || 
+        isSuperAdmin()
+      );
+    }
+    
+    
+    // ==========================================
+    // TASKS COLLECTION
+    // ==========================================
+    // Tasks must be scoped to company
+    match /tasks/{taskId} {
+      // Users can read tasks from their own company
+      allow read: if isAuthenticated() && (
+        resource.data.companyId == getUserData().companyId || 
+        isSuperAdmin()
+      );
+      
+      // Users can create tasks for their own company
+      allow create: if isAuthenticated() && (
+        hasValidCompanyId() || 
+        isSuperAdmin()
+      );
+      
+      // Users can update tasks from their own company
+      allow update: if isAuthenticated() && (
+        resource.data.companyId == getUserData().companyId || 
+        isSuperAdmin()
+      );
+      
+      // Users can delete tasks from their own company
+      allow delete: if isAuthenticated() && (
+        resource.data.companyId == getUserData().companyId || 
+        isSuperAdmin()
+      );
+    }
+    
+    
+    // ==========================================
+    // CAMPAIGNS COLLECTION (Email Campaigns)
+    // ==========================================
+    // Email campaigns must be scoped to company
+    match /campaigns/{campaignId} {
+      // Users can read campaigns from their own company
+      allow read: if isAuthenticated() && (
+        resource.data.companyId == getUserData().companyId || 
+        isSuperAdmin()
+      );
+      
+      // Only Managers and above can create campaigns
+      allow create: if isAuthenticated() && (
+        (hasValidCompanyId() && isManagerOrAbove()) || 
+        isSuperAdmin()
+      );
+      
+      // Only Managers and above can update campaigns
+      allow update: if isAuthenticated() && (
+        (resource.data.companyId == getUserData().companyId && isManagerOrAbove()) || 
+        isSuperAdmin()
+      );
+      
+      // Only Admins can delete campaigns
+      allow delete: if isAuthenticated() && (
+        (resource.data.companyId == getUserData().companyId && isAdmin()) || 
+        isSuperAdmin()
+      );
+    }
+    
+    
+    // ==========================================
+    // INVITATIONS COLLECTION
+    // ==========================================
+    // User invitations - scoped to company
+    match /invitations/{invitationId} {
+      // Admins and Managers can read invitations for their company
+      allow read: if isAuthenticated() && (
+        (resource.data.companyId == getUserData().companyId && isManagerOrAbove()) || 
+        isSuperAdmin()
+      );
+      
+      // Admins and Managers can create invitations
+      // Managers can only invite 'user' role (enforced in server action)
+      allow create: if isAuthenticated() && (
+        (request.resource.data.companyId == getUserData().companyId && isManagerOrAbove()) || 
+        isSuperAdmin()
+      );
+      
+      // Admins can delete any invitation in their company
+      // Managers can only delete invitations with role='user'
+      // SuperAdmins can delete any invitation
+      allow delete: if isAuthenticated() && (
+        (resource.data.companyId == getUserData().companyId && (
+          isAdmin() || 
+          (hasRole('manager') && resource.data.role == 'user')
+        )) || 
+        isSuperAdmin()
+      );
+      
+      // Invitations cannot be updated
+      allow update: if false;
+    }
+    
+    
+    // ==========================================
+    // ATTENDANCE COLLECTION
+    // ==========================================
+    // Attendance records - scoped to user's company
+    match /attendance/{recordId} {
+      // Users can read their own attendance or Managers can read their company's attendance
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        isManagerOrAbove() || 
+        isSuperAdmin()
+      );
+      
+      // Users can create their own attendance records
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid || 
+        isSuperAdmin()
+      );
+      
+      // Attendance records cannot be updated or deleted
+      allow update, delete: if isSuperAdmin();
+    }
+    
+    
+    // ==========================================
+    // PLANS COLLECTION (SuperAdmin only)
+    // ==========================================
+    // Subscription plans - managed by SuperAdmin
+    match /plans/{planId} {
+      // Everyone can read plans (for pricing page)
+      allow read: if true;
+      
+      // Only SuperAdmin can create, update, or delete plans
+      allow create, update, delete: if isSuperAdmin();
+    }
+    
+    
+    // ==========================================
+    // FEATURES COLLECTION (SuperAdmin only)
+    // ==========================================
+    // Feature flags - managed by SuperAdmin
+    match /features/{featureId} {
+      // Everyone can read features (to check what's available)
+      allow read: if true;
+      
+      // Only SuperAdmin can create, update, or delete features
+      allow create, update, delete: if isSuperAdmin();
+    }
+    
+    
+    // ==========================================
+    // SETTINGS COLLECTION (SuperAdmin only)
+    // ==========================================
+    // Global settings like trial configuration
+    match /settings/{settingId} {
+      // Everyone can read settings (for trial information)
+      allow read: if true;
+      
+      // Only SuperAdmin can update settings
+      allow create, update, delete: if isSuperAdmin();
+    }
+    
+    
+    // ==========================================
+    // DEFAULT DENY
+    // ==========================================
+    // Deny access to any other collections not explicitly defined
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

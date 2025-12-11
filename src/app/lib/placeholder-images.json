@@ -1,0 +1,10 @@
+
+{
+  "salesPageHero": {
+    "src": "https://picsum.photos/seed/sales-hero/1200/600",
+    "alt": "OmniFlow Platform Showcase",
+    "width": 1200,
+    "height": 600,
+    "data-ai-hint": "business automation dashboard"
+  }
+}

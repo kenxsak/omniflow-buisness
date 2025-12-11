@@ -1,0 +1,106 @@
+modules = ["nodejs-20", "web", "bash", "nix", "postgresql-16"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Server"
+
+[[workflows.workflow]]
+name = "Server"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 36757
+externalPort = 8008
+
+[[ports]]
+localPort = 41121
+externalPort = 5000
+
+[[ports]]
+localPort = 41235
+externalPort = 3001
+
+[[ports]]
+localPort = 41573
+externalPort = 9000
+
+[[ports]]
+localPort = 41743
+externalPort = 8000
+
+[[ports]]
+localPort = 42641
+externalPort = 6800
+
+[[ports]]
+localPort = 42673
+externalPort = 3003
+
+[[ports]]
+localPort = 44105
+externalPort = 3000
+
+[[ports]]
+localPort = 44139
+externalPort = 8099
+
+[[ports]]
+localPort = 44547
+externalPort = 5173
+
+[[ports]]
+localPort = 45129
+externalPort = 4200
+
+[[ports]]
+localPort = 45273
+externalPort = 8081
+
+[[ports]]
+localPort = 45497
+externalPort = 8080
+
+[[ports]]
+localPort = 45593
+externalPort = 6000
+
+[[ports]]
+localPort = 46883
+externalPort = 3002
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["npm", "run", "start"]
+build = ["npm", "run", "build"]
+
+[userenv]
+
+[userenv.shared]
+ENCRYPTION_KEY = "aQE6McItWqqtoSn8ywyFfrUsQwql8bHRg55OdPYqT4k="
+NEXT_PUBLIC_ENCRYPTION_KEY = "aQE6McItWqqtoSn8ywyFfrUsQwql8bHRg55OdPYqT4k="
+WEBHOOK_TOKEN = "omniflow_webhook_secure_token"

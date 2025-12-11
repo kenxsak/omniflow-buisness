@@ -1,0 +1,48 @@
+{
+	"motd": {
+		"cloudBuildErrorAfter": 1594252800000,
+		"cloudBuildWarnAfter": 1590019200000,
+		"defaultNode10After": 1594252800000,
+		"minVersion": "3.0.5",
+		"node8DeploysDisabledAfter": 1613390400000,
+		"node8RuntimeDisabledAfter": 1615809600000,
+		"node8WarnAfter": 1600128000000,
+		"fetched": 1764320480649
+	},
+	"gemini": true,
+	"usage": true,
+	"analytics-uuid": "f6ec4ad6-e852-49e2-b0d1-ed9ff8d1f872",
+	"user": {
+		"iss": "accounts.google.com",
+		"azp": "563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com",
+		"aud": "563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com",
+		"sub": "103068313092083900123",
+		"hd": "worldmart.in",
+		"email": "hitesh.kothari@worldmart.in",
+		"email_verified": true,
+		"at_hash": "_hrubzRjmHk-QI1AHwJCzg",
+		"iat": 1764386724,
+		"exp": 1764390324
+	},
+	"tokens": {
+		"expires_at": 1764390323133,
+		"access_token": "ya29.a0ATi6K2vjLh85UBNLr-SGD9wQZf4Csn254U2RPQ_pTyHG9xRBsHIEuBvnjOD5BcOo9UntXT3khgJ-iQ3i2RGl_owMsdo4-iAore_gQKjbYtvhE_Dg6qh9N7eSwiDdXZ7HnOalthZXXRR2VuOu4ijH-0e27emJyFwNqlY8OuZL0qaYwy1VVKDHEE2mY0l_Xpd4oLFIQ61Jp8OnaCgYKAQcSARQSFQHGX2MiYlwF0Dxsxijmx-tvGTQ52Q0211",
+		"expires_in": 3599,
+		"refresh_token": "1//0g8Mc8mSwXnqvCgYIARAAGBASNwF-L9Ir01KKHIqza8QwUK4Z7IWpPD_2z4TgnYA7TM8Aez5uQYu8LEDObxcAfYq0YkbgxdbjH4U",
+		"scope": "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/cloud-platform openid https://www.googleapis.com/auth/firebase https://www.googleapis.com/auth/cloudplatformprojects.readonly",
+		"token_type": "Bearer",
+		"id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjkzYTkzNThjY2Y5OWYxYmIwNDBiYzYyMjFkNTQ5M2UxZmZkOGFkYTEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiNTYzNTg0MzM1ODY5LWZncmhnbWQ0N2JxbmVraWo1aThiNXByMDNobzg0OWU2LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiNTYzNTg0MzM1ODY5LWZncmhnbWQ0N2JxbmVraWo1aThiNXByMDNobzg0OWU2LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTAzMDY4MzEzMDkyMDgzOTAwMTIzIiwiaGQiOiJ3b3JsZG1hcnQuaW4iLCJlbWFpbCI6ImhpdGVzaC5rb3RoYXJpQHdvcmxkbWFydC5pbiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhdF9oYXNoIjoiX2hydWJ6UmptSGstUUkxQUh3SkN6ZyIsImlhdCI6MTc2NDM4NjcyNCwiZXhwIjoxNzY0MzkwMzI0fQ.Obekk4Wmn0vIb1q7gJ9jXMgR0D1BpRd3OWBndCXV_67_ReYDe2iGQfa6DSieJyVU8nw9rnD2X0beEPrwsKWTHlF3KBjhutIi-CZFmGNdZkacuxf_KXMuDUH5_5_P9U9CbmCLtu8ODrpVCM-UUsj-FMPQ9H8hXG3m4Rav4sr3asXY9Fnb6vX__KXDB7aRsETkhPRTcnXiHLjU3iIkqqNevJkF7rCia9W71XaOYZ_ejBhOsemokRqYZI1APZhWtE0nD2QIqN6FfxS1lOmgTqXOxZhTQJTbSJnWv5c6oFYIzyI6IaKYr4RA6Vbunk8DFtLv7JCmg9N4bY8S35TknRplPA"
+	},
+	"loginScopes": [
+		"email",
+		"openid",
+		"https://www.googleapis.com/auth/cloudplatformprojects.readonly",
+		"https://www.googleapis.com/auth/firebase",
+		"https://www.googleapis.com/auth/cloud-platform"
+	],
+	"apiEnablementCache": {
+		"omniflow-39htq": {
+			"firestore.googleapis.com": true
+		}
+	}
+}
