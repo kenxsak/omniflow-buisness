@@ -1,12 +1,2 @@
 {
-  "crons": [
-    {
-      "path": "/api/run-automations",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/run-campaign-jobs",
-      "schedule": "0 0 * * *"
-    }
-  ]
 }
